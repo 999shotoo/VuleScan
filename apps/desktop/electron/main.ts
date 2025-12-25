@@ -29,6 +29,22 @@ let win: BrowserWindow | null
 function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    width: 1200,
+    height: 800,
+    minWidth: 1200,
+    minHeight: 800,
+    center: true,
+    title: 'VuleScan',
+    titleBarStyle: 'hidden',
+    darkTheme: true,
+    titleBarOverlay: {
+      color: '#00000000',
+      symbolColor: '#ffffff',
+      height: 30
+    },
+    trafficLightPosition: { x: 10, y: 10 },
+    resizable: true,
+    fullscreenable: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
     },
