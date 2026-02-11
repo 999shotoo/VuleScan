@@ -1,121 +1,166 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
-import { MessageSquare, Plus, Clock } from 'lucide-react'
-
-interface ChatSession {
-  id: string;
-  title: string;
-  lastMessage: string;
-  timestamp: string;
-}
+import { MessageSquare, Plus, ShieldCheck, Lock, Code, Network, FileSearch } from 'lucide-react'
+import { Input } from '../../components/ui/input'
+import { getAllChats, ChatSession, createNewChat } from '../../lib/chat-storage'
 
 export const ChatHome = () => {
   const navigate = useNavigate()
-  const [sessions] = useState<ChatSession[]>([
-    {
-      id: '234456',
-      title: 'Network Scan Discussion',
-      lastMessage: 'Can you scan 192.168.1.1 for vulnerabilities?',
-      timestamp: '2 hours ago',
-    },
-    {
-      id: '345567',
-      title: 'Subdomain Enumeration',
-      lastMessage: 'Find subdomains for example.com',
-      timestamp: 'Yesterday',
-    },
-    {
-      id: '456678',
-      title: 'Security Assessment',
-      lastMessage: 'What are the best practices for penetration testing?',
-      timestamp: '2 days ago',
-    },
-  ])
+  const [sessions, setSessions] = useState<ChatSession[]>([])
+  const [inputValue, setInputValue] = useState('')
+
+  // Load chats from localStorage on mount
+  useEffect(() => {
+    const chats = getAllChats()
+    setSessions(chats)
+  }, [])
 
   const handleNewChat = () => {
-    const newId = Date.now().toString()
-    navigate(`/chat/${newId}`)
+    const newChat = createNewChat()
+    setSessions([newChat, ...sessions])
+    navigate(`/chat/${newChat.id}`)
+  }
+
+  const handleQuickStart = (text: string) => {
+    const newChat = createNewChat()
+    setSessions([newChat, ...sessions])
+    navigate(`/chat/${newChat.id}`, { state: { initialMessage: text } })
+  }
+
+  const handleInputSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (inputValue.trim()) {
+      handleQuickStart(inputValue)
+    }
+  }
+
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Good morning'
+    if (hour < 18) return 'Good afternoon'
+    return 'Good evening'
+  }
+
+  const formatTimestamp = (timestamp: number) => {
+    const now = Date.now()
+    const diff = now - timestamp
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+
+    if (minutes < 1) return 'Just now'
+    if (minutes < 60) return `${minutes}m ago`
+    if (hours < 24) return `${hours}h ago`
+    if (days < 7) return `${days}d ago`
+    return new Date(timestamp).toLocaleDateString()
   }
 
   return (
-    <div className="h-screen p-6 overflow-y-auto">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">AI Security Assistant</h1>
-            <p className="text-muted-foreground mt-1">
-              Start a conversation about vulnerability scanning and security testing
-            </p>
-          </div>
-          <Button onClick={handleNewChat} size="lg">
-            <Plus className="mr-2 h-5 w-5" />
-            New Chat
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Model Selector in top-right */}
+        <div className="flex justify-end pt-4 pb-2">
+          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
+            <ShieldCheck className="h-3 w-3 mr-1" />
+            VuleScan AI
           </Button>
         </div>
 
-        <div className="grid gap-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Recent Conversations
-          </h2>
-          
-          {sessions.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center text-muted-foreground py-8">
-                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No conversations yet</p>
-                  <p className="text-sm mt-1">Start a new chat to begin</p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            sessions.map((session) => (
-              <Link key={session.id} to={`/chat/${session.id}`}>
-                <Card className="hover:bg-accent transition-colors cursor-pointer">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <MessageSquare className="h-5 w-5" />
-                      {session.title}
-                    </CardTitle>
-                    <CardDescription className="flex items-center justify-between">
-                      <span className="line-clamp-1">{session.lastMessage}</span>
-                      <span className="text-xs whitespace-nowrap ml-2">{session.timestamp}</span>
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </Link>
-            ))
-          )}
-        </div>
+        {/* Centered Main Content */}
+        <div className="min-h-[60vh] flex flex-col items-center justify-center py-12">
+          {/* Greeting */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 mb-2">
+              <ShieldCheck className="h-8 w-8 text-primary" />
+              <h1 className="text-4xl font-normal text-foreground">
+                {getGreeting()}, Security Pro
+              </h1>
+            </div>
+          </div>
 
-        <Card className="bg-muted/50">
-          <CardHeader>
-            <CardTitle className="text-lg">What can I help you with?</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-2 text-sm">
-              <div className="flex items-start gap-2">
-                <span className="text-primary">•</span>
-                <span>Network vulnerability scanning and port analysis</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-primary">•</span>
-                <span>Subdomain discovery and enumeration</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-primary">•</span>
-                <span>Security testing and brute force analysis (authorized only)</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-primary">•</span>
-                <span>Directory and file enumeration</span>
+          {/* Large Centered Input */}
+          <form onSubmit={handleInputSubmit} className="w-full max-w-2xl mb-8">
+            <div className="relative">
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Type / for commands"
+                className="w-full h-14 px-6 text-base rounded-3xl border-2 focus-visible:ring-offset-0 focus-visible:ring-1"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <Button type="submit" size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full">
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </form>
+
+          {/* Suggestion Chips */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+            <Button
+              onClick={() => handleQuickStart('Scan network for vulnerabilities')}
+              variant="outline"
+              size="sm"
+              className="rounded-full h-9 px-4 text-sm"
+            >
+              <Lock className="h-4 w-4 mr-2" />
+              Network Scan
+            </Button>
+            <Button
+              onClick={() => handleQuickStart('Find subdomains for a domain')}
+              variant="outline"
+              size="sm"
+              className="rounded-full h-9 px-4 text-sm"
+            >
+              <Code className="h-4 w-4 mr-2" />
+              Subdomain Search
+            </Button>
+            <Button
+              onClick={() => handleQuickStart('Check for open ports')}
+              variant="outline"
+              size="sm"
+              className="rounded-full h-9 px-4 text-sm"
+            >
+              <Network className="h-4 w-4 mr-2" />
+              Port Analysis
+            </Button>
+            <Button
+              onClick={() => handleQuickStart('Perform directory enumeration')}
+              variant="outline"
+              size="sm"
+              className="rounded-full h-9 px-4 text-sm"
+            >
+              <FileSearch className="h-4 w-4 mr-2" />
+              Directory Enum
+            </Button>
+          </div>
+        </div>
+
+        {/* Recent Conversations - Minimal */}
+        {sessions.length > 0 && (
+          <div className="pb-8 space-y-3">
+            <h2 className="text-sm font-medium text-muted-foreground px-2">Recent</h2>
+            <div className="space-y-1">
+              {sessions.slice(0, 10).map((session) => (
+                <Link key={session.id} to={`/chat/${session.id}`}>
+                  <div className="group flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors">
+                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{session.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {session.messages.length} message{session.messages.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatTimestamp(session.updatedAt)}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

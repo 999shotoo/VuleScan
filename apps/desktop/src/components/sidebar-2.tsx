@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { ArchiveX, Command, File, Inbox, Send, Trash2 } from "lucide-react"
+import { ArchiveX, Command, File, Inbox, Send, Trash2, Plus } from "lucide-react"
+import { getAllChats, createNewChat } from "../lib/chat-storage"
 
 // import { NavUser } from "@/components/nav-user"
 import { Label } from "./ui/label"
@@ -163,6 +164,41 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navigate = useNavigate()
   const location = useLocation()
   const { setOpen } = useSidebar()
+  const [chats, setChats] = React.useState<any[]>([])
+
+  // Load chats from localStorage
+  React.useEffect(() => {
+    const loadChats = () => {
+      const allChats = getAllChats()
+      setChats(allChats)
+    }
+    loadChats()
+
+    // Reload chats when the window gains focus (in case they were updated)
+    window.addEventListener('focus', loadChats)
+    return () => window.removeEventListener('focus', loadChats)
+  }, [location.pathname])
+
+  const handleNewChat = () => {
+    const newChat = createNewChat()
+    setChats([newChat, ...chats])
+    navigate(`/chat/${newChat.id}`)
+    setOpen(true)
+  }
+
+  const formatTimestamp = (timestamp: number) => {
+    const now = Date.now()
+    const diff = now - timestamp
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+
+    if (minutes < 1) return 'Just now'
+    if (minutes < 60) return `${minutes}m ago`
+    if (hours < 24) return `${hours}h ago`
+    if (days < 7) return `${days}d ago`
+    return new Date(timestamp).toLocaleDateString()
+  }
 
   // Determine active item based on current route
   const activeItem = React.useMemo(
@@ -236,31 +272,65 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <div className="text-foreground text-base font-medium">
               {activeItem?.title}
             </div>
-            <Label className="flex items-center gap-2 text-sm">
-              <span>Unreads</span>
-              <Switch className="shadow-none" />
-            </Label>
+            <button
+              onClick={handleNewChat}
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-8 w-8"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
           </div>
-          <SidebarInput placeholder="Type to search..." />
+          <SidebarInput placeholder="Search chats..." />
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup className="px-0">
             <SidebarGroupContent>
-              {activeItem && data.contentData[activeItem.title as keyof typeof data.contentData]?.map((item, index) => (
-                <a
-                  href="#"
-                  key={index}
-                  className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex flex-col items-start gap-2 border-b p-4 text-sm leading-tight last:border-b-0"
-                >
-                  <div className="flex w-full items-center gap-2">
-                    <span className="font-medium">{item.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">{item.time}</span>
+              {activeItem.title === 'Chat' ? (
+                chats.length > 0 ? (
+                  chats.map((chat) => (
+                    <button
+                      key={chat.id}
+                      onClick={() => {
+                        navigate(`/chat/${chat.id}`)
+                        setOpen(false)
+                      }}
+                      className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex flex-col items-start gap-2 border-b p-4 text-sm leading-tight last:border-b-0 w-full text-left"
+                    >
+                      <div className="flex w-full items-center gap-2">
+                        <span className="font-medium truncate">{chat.title}</span>
+                        <span className="ml-auto text-xs text-muted-foreground whitespace-nowrap">
+                          {formatTimestamp(chat.updatedAt)}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground line-clamp-2">
+                        {chat.messages.length > 0 
+                          ? `${chat.messages.length} message${chat.messages.length !== 1 ? 's' : ''}`
+                          : 'No messages yet'}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    <p>No chats yet</p>
+                    <p className="text-xs mt-1">Click + to start a new chat</p>
                   </div>
-                  <span className="text-xs text-muted-foreground line-clamp-2">
-                    {item.preview}
-                  </span>
-                </a>
-              ))}
+                )
+              ) : (
+                activeItem && data.contentData[activeItem.title as keyof typeof data.contentData]?.map((item, index) => (
+                  <a
+                    href="#"
+                    key={index}
+                    className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex flex-col items-start gap-2 border-b p-4 text-sm leading-tight last:border-b-0"
+                  >
+                    <div className="flex w-full items-center gap-2">
+                      <span className="font-medium">{item.name}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">{item.time}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground line-clamp-2">
+                      {item.preview}
+                    </span>
+                  </a>
+                ))
+              )}
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>

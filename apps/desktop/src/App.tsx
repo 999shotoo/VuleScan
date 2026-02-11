@@ -30,7 +30,7 @@ const Layout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col">
       {/* <Header /> */}
 
       {!isOnline ? (
@@ -58,14 +58,17 @@ const Layout = () => {
                 "--sidebar-width": "350px",
               } as React.CSSProperties
             }
+            className="flex-1"
           >
             <AppSidebar />
-            <SidebarInset>
-              <header className="bg-background sticky top-0 flex shrink-0 items-center gap-2 border-b p-4">
+            <SidebarInset className="flex flex-col">
+              <header className="bg-background sticky top-0 flex shrink-0 items-center gap-2 border-b p-4 z-10">
                 <SidebarTrigger className="-ml-1" />
               
               </header>
-              <Outlet />
+              <div className="flex-1 overflow-hidden">
+                <Outlet />
+              </div>
             </SidebarInset>
           </SidebarProvider>
           {/* <Outlet /> */}
