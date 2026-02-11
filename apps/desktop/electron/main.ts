@@ -2,6 +2,7 @@ import { app, BrowserWindow } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { startServer, stopServer } from './server/index'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -25,6 +26,7 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
 let win: BrowserWindow | null
+let apiServer: any = null
 
 function createWindow() {
   win = new BrowserWindow({
@@ -68,6 +70,7 @@ function createWindow() {
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
+    stopServer(apiServer)
     app.quit()
     win = null
   }
@@ -81,4 +84,12 @@ app.on('activate', () => {
   }
 })
 
-app.whenReady().then(createWindow)
+app.on('before-quit', () => {
+  stopServer(apiServer)
+})
+
+app.whenReady().then(() => {
+  // Start the API server
+  apiServer = startServer()
+  createWindow()
+})

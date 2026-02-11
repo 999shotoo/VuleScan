@@ -1,9 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, HashRouter, Outlet, Link } from 'react-router-dom';
 import Home from '@/src/pages/home';
-import Sidebar from './components/sidebar';
+import { TooltipProvider } from './components/ui/tooltip';
 
-
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "./components/ui/sidebar"
+import { AppSidebar } from './components/sidebar-2';
+import { ChatHome } from './pages/chat/home';
+import { MainChat } from './pages/chat/mainchat';
 
 
 const Layout = () => {
@@ -40,11 +47,27 @@ const Layout = () => {
             <Link to="/login" className="ml-4 text-blue-600 hover:underline">Login</Link>
             <Link to="/register" className="ml-4 text-blue-600 hover:underline">Register</Link>
           </nav> */}
-          <Sidebar>
+          {/* <Sidebar>
           <main>
             <Outlet />
           </main>
-          </Sidebar>
+          </Sidebar> */}
+          <SidebarProvider
+            style={
+              {
+                "--sidebar-width": "350px",
+              } as React.CSSProperties
+            }
+          >
+            <AppSidebar />
+            <SidebarInset>
+              <header className="bg-background sticky top-0 flex shrink-0 items-center gap-2 border-b p-4">
+                <SidebarTrigger className="-ml-1" />
+              
+              </header>
+              <Outlet />
+            </SidebarInset>
+          </SidebarProvider>
           {/* <Outlet /> */}
         </>
       )}
@@ -58,13 +81,19 @@ function App(): React.JSX.Element {
   return (
     // <AuthProvider>
     //   <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-        <HashRouter>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Home />} />
-            </Route>
-          </Routes>
-        </HashRouter>
+    <TooltipProvider>
+      <HashRouter>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="/chat" element={<ChatHome />} />
+            <Route path="/chat/:id" element={<MainChat />} />
+            <Route path="*" element={<div>404 Not Found</div>} />
+            
+          </Route>
+        </Routes>
+      </HashRouter>
+    </TooltipProvider>
     //   </ThemeProvider>
     // </AuthProvider>
   );
