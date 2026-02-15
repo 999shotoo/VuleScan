@@ -276,14 +276,14 @@ const CodeBlockBody = memo(
     return (
       <pre
         className={cn(
-          "dark:!bg-[var(--shiki-dark-bg)] dark:!text-[var(--shiki-dark)] m-0 p-4 text-sm",
+          "dark:!bg-[var(--shiki-dark-bg)] dark:!text-[var(--shiki-dark)] m-0 p-4 text-sm overflow-x-auto",
           className
         )}
-        style={preStyle}
+        style={{ ...preStyle, width: '100%', maxWidth: '100%', minWidth: 0 }}
       >
         <code
           className={cn(
-            "font-mono text-sm",
+            "font-mono text-sm block",
             showLineNumbers && "[counter-increment:line_0] [counter-reset:line]"
           )}
         >
@@ -314,13 +314,14 @@ export const CodeBlockContainer = ({
 }: HTMLAttributes<HTMLDivElement> & { language: string }) => (
   <div
     className={cn(
-      "group relative w-full overflow-hidden rounded-md border bg-background text-foreground",
+      "group relative overflow-hidden rounded-md border bg-background text-foreground",
       className
     )}
     data-language={language}
     style={{
-      containIntrinsicSize: "auto 200px",
-      contentVisibility: "auto",
+      width: '100%',
+      maxWidth: '100%',
+      minWidth: 0,
       ...style,
     }}
     {...props}
@@ -412,7 +413,7 @@ export const CodeBlockContent = ({
   }, [code, language, rawTokens]);
 
   return (
-    <div className="relative overflow-auto">
+    <div className="relative" style={{ width: '100%', maxWidth: '100%', minWidth: 0, overflow: 'hidden' }}>
       <CodeBlockBody showLineNumbers={showLineNumbers} tokenized={tokenized} />
     </div>
   );

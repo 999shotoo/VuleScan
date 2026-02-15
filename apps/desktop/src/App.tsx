@@ -10,8 +10,8 @@ import {
 } from "./components/ui/sidebar"
 import { AppSidebar } from './components/sidebar-2';
 import { ChatHome } from './pages/chat/home';
+import { SimpleChat } from './pages/chat/simple-chat';
 import { MainChat } from './pages/chat/mainchat';
-
 
 const Layout = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -61,9 +61,9 @@ const Layout = () => {
             className="flex-1"
           >
             <AppSidebar />
-            <SidebarInset className="flex flex-col">
-              <header className="bg-background sticky top-0 flex shrink-0 items-center gap-2 border-b p-4 z-10">
-                <SidebarTrigger className="-ml-1" />
+            <SidebarInset className="flex flex-col ">
+              <header className="bg-background sticky top-0 flex shrink-0 items-center gap-2 border-b p-4 z-10 drag ">
+                <SidebarTrigger className="-ml-1 no-drag" />
               
               </header>
               <div className="flex-1 overflow-hidden">

@@ -68,7 +68,7 @@ const data = {
         time: "5 min ago",
         preview: "New scan results are ready for review.",
       },
-      {
+      { 
         name: "System Notifications",
         time: "1 hour ago",
         preview: "Weekly security report generated successfully.",
@@ -222,8 +222,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild className="md:h-8 md:p-0">
-                <a href="#">
+              <SidebarMenuButton size="lg" className="md:h-8 md:p-0">
+                <a href="#" className="flex items-center w-full">
                   <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                     <Command className="size-4" />
                   </div>
@@ -288,19 +288,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 chats.length > 0 ? (
                   chats.map((chat) => (
                     <button
-                      key={chat.id}
-                      onClick={() => {
-                        navigate(`/chat/${chat.id}`)
-                        setOpen(false)
-                      }}
-                      className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex flex-col items-start gap-2 border-b p-4 text-sm leading-tight last:border-b-0 w-full text-left"
-                    >
-                      <div className="flex w-full items-center gap-2">
-                        <span className="font-medium truncate">{chat.title}</span>
-                        <span className="ml-auto text-xs text-muted-foreground whitespace-nowrap">
-                          {formatTimestamp(chat.updatedAt)}
-                        </span>
-                      </div>
+                          key={chat.id}
+                          onClick={() => {
+                            navigate(`/chat/${chat.id}`)
+                            setOpen(false)
+                          }}
+                          className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex flex-col items-start gap-2 min-w-0 border-b p-4 text-sm leading-tight last:border-b-0 w-full text-left overflow-hidden"
+                        >
+                          <div className="w-full grid grid-cols-[1fr_auto] items-center gap-2 min-w-0">
+                            <span className="font-medium min-w-0 truncate">{chat.title}</span>
+                            <span className="ml-2 text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
+                              {formatTimestamp(chat.updatedAt)}
+                            </span>
+                          </div>
                       <span className="text-xs text-muted-foreground line-clamp-2">
                         {chat.messages.length > 0 
                           ? `${chat.messages.length} message${chat.messages.length !== 1 ? 's' : ''}`
@@ -319,11 +319,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <a
                     href="#"
                     key={index}
-                    className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex flex-col items-start gap-2 border-b p-4 text-sm leading-tight last:border-b-0"
+                    className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex flex-col items-start gap-2 border-b p-4 text-sm leading-tight last:border-b-0 overflow-hidden"
                   >
-                    <div className="flex w-full items-center gap-2">
-                      <span className="font-medium">{item.name}</span>
-                      <span className="ml-auto text-xs text-muted-foreground">{item.time}</span>
+                    <div className="w-full grid grid-cols-[1fr_auto] items-center gap-2">
+                      <span className="font-medium min-w-0 truncate">{item.name}</span>
+                      <span className="ml-2 text-xs text-muted-foreground whitespace-nowrap">{item.time}</span>
                     </div>
                     <span className="text-xs text-muted-foreground line-clamp-2">
                       {item.preview}
