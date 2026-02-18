@@ -1,0 +1,17 @@
+node_modules/
+dist/
+*.log
+*.lock
+.DS_Store
+.env
+.env.local
+scan-reports/*.json
+!scan-reports/.gitkeep
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
