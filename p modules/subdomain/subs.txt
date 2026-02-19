@@ -1,7 +1,0 @@
-www
-admin
-api
-dev
-test
-mail
-blog

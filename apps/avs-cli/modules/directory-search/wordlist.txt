@@ -1,6 +1,0 @@
-admin
-login
-config
-backup
-uploads
-robots.txt
