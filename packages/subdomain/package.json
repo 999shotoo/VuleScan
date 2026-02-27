@@ -1,0 +1,21 @@
+{
+  "name": "@avs-cli/subdomain",
+  "version": "1.0.0",
+  "description": "Subdomain finder module for AVS CLI",
+  "type": "module",
+  "main": "dist/subdomain-finder.js",
+  "types": "dist/subdomain-finder.d.ts",
+  "bin": {
+    "subdomain": "dist/subdomain-finder.js"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": ["subdomain", "dns", "scanner"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "http-proxy-agent": "^7.0.0",
+    "https-proxy-agent": "^7.0.0"
+  }
+}

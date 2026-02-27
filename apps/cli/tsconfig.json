@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020"],
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "paths": {
+      "@avs-cli/*": ["./packages/*/src"]
+    }
+  },
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/bruteforce" },
+    { "path": "./packages/directory-search" },
+    { "path": "./packages/encryption-analyzer" },
+    { "path": "./packages/internet-archive" },
+    { "path": "./packages/Network-scan" },
+    { "path": "./packages/subdomain" }
+  ],
+  "exclude": ["node_modules", "dist"]
+}
+

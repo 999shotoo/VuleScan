@@ -1,0 +1,45 @@
+{
+  "name": "avs-cli-monorepo",
+  "version": "1.0.0",
+  "description": "TypeScript-based Vulnerability Scanner CLI - Comprehensive security scanning tool",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/core",
+    "packages/bruteforce",
+    "packages/directory-search",
+    "packages/encryption-analyzer",
+    "packages/internet-archive",
+    "packages/Network-scan",
+    "packages/subdomain"
+  ],
+  "scripts": {
+    "build": "npm run build -ws",
+    "build:core": "npm run build -w packages/core",
+    "build:modules": "npm run build -ws --ignore=packages/core",
+    "dev": "npm run dev -w packages/core",
+    "start": "npm run start -w packages/core",
+    "clean": "npm run clean -ws",
+    "install:all": "npm install && npm run build -ws",
+    "test": "npm run test -ws --if-present",
+    "lint": "npm run lint -ws --if-present"
+  },
+  "keywords": [
+    "vulnerability",
+    "scanner",
+    "security",
+    "cli",
+    "typescript",
+    "penetration-testing",
+    "monorepo"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
