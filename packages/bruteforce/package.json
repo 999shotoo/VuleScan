@@ -1,0 +1,40 @@
+{
+  "name": "@vulscan/bruteforce",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "description": "Brute force attack module for AVS CLI",
+  "bin": {
+    "bruteforce": "./dist/cli/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "http-proxy-agent": "^7.0.2",
+    "https-proxy-agent": "^7.0.6",
+    "ssh2": "^1.15.0",
+    "socks-proxy-agent": "^8.0.5",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.2",
+    "@types/ssh2": "^1.11.22",
+    "@types/yargs": "^17.0.35",
+    "typescript": "^5.0.0"
+  }
+}
