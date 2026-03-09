@@ -1,5 +1,5 @@
 {
-  "name": "VuleScan",
+  "name": "vulescan",
   "private": true,
   "scripts": {
     "build": "turbo run build",

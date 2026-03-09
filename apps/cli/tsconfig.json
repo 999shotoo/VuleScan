@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "paths": {
+      "@vulscan/*": ["../../packages/*/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../../packages/core" },
+    { "path": "../../packages/bruteforce" },
+    { "path": "../../packages/directory-search" },
+    { "path": "../../packages/encryption-analyzer" },
+    { "path": "../../packages/internet-archive" },
+    { "path": "../../packages/Network-scan" },
+    { "path": "../../packages/subdomain" }
+  ]
+}

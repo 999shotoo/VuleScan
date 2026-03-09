@@ -1,0 +1,29 @@
+{
+  "name": "@vulscan/core",
+  "version": "1.0.0",
+  "description": "VulScan Core - Shared types and utilities",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^8.2.10",
+    "@types/node": "^20.10.6",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "name": "@vulscan/cli",
+  "version": "1.0.0",
+  "description": "VulScan CLI - Main application",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "vulscan": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "node --loader ts-node/esm src/index.ts",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@vulscan/core": "*",
+    "@vulscan/bruteforce": "*",
+    "@vulscan/directory-search": "*",
+    "@vulscan/encryption-analyzer": "*",
+    "@vulscan/internet-archive": "*",
+    "@vulscan/network-scan": "*",
+    "@vulscan/subdomain": "*",
+    "inquirer": "^9.2.12"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^8.2.10",
+    "@types/node": "^20.10.6",
+    "typescript": "^5.3.3"
+  }
+}

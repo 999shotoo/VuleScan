@@ -1,0 +1,38 @@
+{
+  "name": "@vulscan/network-scan",
+  "version": "1.0.0",
+  "description": "Network scanner module with TCP port scanning and banner grabbing for AVS CLI",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "network-scan": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "network",
+    "scanner",
+    "security",
+    "tcp",
+    "banner",
+    "port",
+    "nmap",
+    "cli",
+    "typescript",
+    "os"
+  ],
+  "author": "Sanskriti2106",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
