@@ -36,8 +36,11 @@ async function findMonorepoRoot(startDir: string): Promise<string> {
 async function getReportsDir(): Promise<string> {
   if (cachedReportsDir) return cachedReportsDir;
 
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
+  const moduleFilePath =
+    typeof __filename !== "undefined"
+      ? __filename
+      : fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(moduleFilePath);
   const monorepoRoot = await findMonorepoRoot(__dirname);
 
   cachedReportsDir = path.join(monorepoRoot, "scan-reports");

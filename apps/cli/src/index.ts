@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * AVS CLI - Vulnerability Scanner
  * A comprehensive TypeScript-based vulnerability scanner with interactive menu system
