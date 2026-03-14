@@ -9,30 +9,6 @@ import { ScanReport, ScanResult, generateTimestamp } from "@vulscan/core";
 
 let cachedReportsDir: string | null = null;
 
-async function findMonorepoRoot(startDir: string): Promise<string> {
-  let currentDir = startDir;
-  while (true) {
-    const pkgPath = path.join(currentDir, "package.json");
-    try {
-      const pkgRaw = await fs.readFile(pkgPath, "utf-8");
-      const pkg = JSON.parse(pkgRaw);
-      if (
-        pkg &&
-        Array.isArray(pkg.workspaces) &&
-        pkg.workspaces.includes("packages/core")
-      ) {
-        return currentDir;
-      }
-    } catch {
-      // keep searching upward
-    }
-
-    const parentDir = path.dirname(currentDir);
-    if (parentDir === currentDir) return startDir;
-    currentDir = parentDir;
-  }
-}
-
 async function getReportsDir(): Promise<string> {
   if (cachedReportsDir) return cachedReportsDir;
 
@@ -41,9 +17,9 @@ async function getReportsDir(): Promise<string> {
       ? __filename
       : fileURLToPath(import.meta.url);
   const __dirname = path.dirname(moduleFilePath);
-  const monorepoRoot = await findMonorepoRoot(__dirname);
-
-  cachedReportsDir = path.join(monorepoRoot, "scan-reports");
+  // Walk up from dist/ to apps/cli, then use scan-reports/ there
+  const cliRoot = path.resolve(__dirname, "..");
+  cachedReportsDir = path.join(cliRoot, "scan-reports");
   return cachedReportsDir;
 }
 
@@ -66,7 +42,7 @@ function buildStructuredReport(report: ScanReport): string {
 
   report.scans.forEach((scan, index) => {
     lines.push(`${index + 1}. ${scan.name}`);
-    lines.push(`   Status   : ${scan.status.toUpperCase()}`);
+    lines.push(`   Status   : ${(scan.displayStatus || scan.status.toUpperCase())}`);
     if (scan.severity) {
       lines.push(`   Severity : ${scan.severity.toUpperCase()}`);
     }
@@ -162,6 +138,15 @@ export async function listScanReports(): Promise<string[]> {
     console.error("Failed to list reports:", error);
     return [];
   }
+}
+
+/**
+ * Read a report file as plain text
+ */
+export async function readReportText(filename: string): Promise<string> {
+  const reportsDir = await getReportsDir();
+  const filepath = path.join(reportsDir, filename);
+  return fs.readFile(filepath, "utf-8");
 }
 
 /**

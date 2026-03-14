@@ -9,8 +9,9 @@ import { ScanResult } from "@vulscan/core";
  */
 export function formatResult(result: ScanResult): string {
   const icon = result.status === "safe" ? "✅" : "⚠️";
-  const statusText =
-    result.status === "safe"
+  const statusText = result.displayStatus
+    ? result.displayStatus
+    : result.status === "safe"
       ? "safe"
       : result.status.toUpperCase();
   const severity = result.severity

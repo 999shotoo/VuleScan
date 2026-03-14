@@ -9,7 +9,7 @@ import { scanModules } from "../modules/scanModules.js";
  * Display main menu and return user choice
  */
 export async function showMainMenu(): Promise<
-  "single" | "multiple" | "all" | "start" | "help" | "exit"
+  "single" | "multiple" | "all" | "start" | "help" | "reports" | "exit"
 > {
   console.log("\nVULNERABILITY SCANNER");
   console.log("─".repeat(50));
@@ -24,6 +24,7 @@ export async function showMainMenu(): Promise<
         { name: "Run multiple scans", value: "multiple" },
         { name: "Run all scans", value: "all" },
         new inquirer.Separator(),
+        { name: "View saved reports", value: "reports" },
         { name: "Help", value: "help" },
         { name: "Exit", value: "exit" },
       ],
@@ -31,6 +32,27 @@ export async function showMainMenu(): Promise<
   ]);
 
   return answer.choice;
+}
+
+/**
+ * Select a saved report from a list
+ */
+export async function selectReport(reports: string[]): Promise<string | null> {
+  const choices: any[] = reports.map((r) => ({ name: r, value: r }));
+  choices.push(new inquirer.Separator("──────────────────"));
+  choices.push({ name: "← Back", value: "back" });
+
+  const answer = await inquirer.prompt([
+    {
+      type: "list",
+      name: "report",
+      message: "Select a report to view:",
+      choices,
+      pageSize: 12,
+    },
+  ]);
+
+  return answer.report === "back" ? null : answer.report;
 }
 
 /**
