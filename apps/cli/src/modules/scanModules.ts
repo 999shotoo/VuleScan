@@ -15,13 +15,14 @@ import { default as findSubdomains } from "@vulscan/subdomain";
 import { scanNetwork } from "@vulscan/network-scan";
 import { InternetArchiveVulnerabilityScanner } from "@vulscan/internet-archive";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const moduleFilePath =
+  typeof __filename !== "undefined" ? __filename : fileURLToPath(import.meta.url);
+const __dirname = path.dirname(moduleFilePath);
 const directoryWordlistPath = path.resolve(
   __dirname,
-  "../../wordlists/common.txt"
+  "../wordlists/common.txt"
 );
-const bruteforceWordlistPath = path.resolve(__dirname, "../../wordlists/common.txt");
+const bruteforceWordlistPath = path.resolve(__dirname, "../wordlists/common.txt");
 
 /**
  * Define all available scan modules
