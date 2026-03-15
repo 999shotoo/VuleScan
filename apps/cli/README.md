@@ -63,6 +63,12 @@ Expected result:
 - Summary is shown in terminal
 - JSON report is created at the exact `--json` path
 
+## Monorepo Compatibility Notes
+
+- Scanner module imports use named exports from `@vulscan/*` packages.
+- CLI `tsconfig.json` keeps an explicit alias for `@vulscan/network-scan` to handle the `packages/Network-scan` folder casing on Linux CI.
+- CLI `package.json` explicitly declares internal `@vulscan/*` dependencies for consistent workspace and npm resolution.
+
 ## NPM Publish (Later)
 
 Use these steps when you are ready to publish the CLI package to npm.
@@ -421,7 +427,7 @@ node dist/index.js https://example.com --all
 
 - **Do NOT publish from a personal npm account.** Publish only via the team's GitHub Actions workflow with the org's npm token.
 - The branch `fix/npm-cli-runtime-and-wordlist` contains all runtime bug fixes and is waiting for PR review.
-- All `@vulscan/*` workspace packages are bundled into the single `dist/index.js` at build time (no separate installs needed).
+- `@vulscan/*` packages are declared as explicit dependencies in the CLI package for reliable monorepo and registry resolution.
 - `inquirer` and `ssh2` are listed as external dependencies (installed at runtime from npm, not bundled).
 
 ---

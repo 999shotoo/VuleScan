@@ -14,7 +14,7 @@ import tls from "tls";
 import { bruteForce } from "@vulscan/bruteforce";
 import { scanDirectory } from "@vulscan/directory-search";
 import { analyzeEncryption } from "@vulscan/encryption-analyzer";
-import { default as findSubdomains } from "@vulscan/subdomain";
+import { findSubdomains } from "@vulscan/subdomain";
 import { scanNetwork } from "@vulscan/network-scan";
 import { InternetArchiveVulnerabilityScanner } from "@vulscan/internet-archive";
 

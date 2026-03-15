@@ -36,6 +36,13 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@vulscan/bruteforce": "^1.0.0",
+    "@vulscan/core": "^1.0.0",
+    "@vulscan/directory-search": "^1.0.0",
+    "@vulscan/encryption-analyzer": "^1.0.0",
+    "@vulscan/internet-archive": "^1.0.0",
+    "@vulscan/network-scan": "^1.0.0",
+    "@vulscan/subdomain": "^1.0.0",
     "inquirer": "^9.2.12",
     "ssh2": "^1.17.0"
   },

@@ -2,17 +2,12 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "moduleResolution": "Node",
     "outDir": "./dist",
     "composite": false,
     "incremental": false,
     "paths": {
-      "@vulscan/core": ["../../packages/core/src/index.ts"],
-      "@vulscan/bruteforce": ["../../packages/bruteforce/src/index.ts"],
-      "@vulscan/directory-search": ["../../packages/directory-search/src/index.ts"],
-      "@vulscan/encryption-analyzer": ["../../packages/encryption-analyzer/src/index.ts"],
-      "@vulscan/internet-archive": ["../../packages/internet-archive/src/index.ts"],
-      "@vulscan/network-scan": ["../../packages/Network-scan/src/index.ts"],
-      "@vulscan/subdomain": ["../../packages/subdomain/src/index.ts"],
+      "@vulscan/network-scan": ["../../packages/Network-scan/src"],
       "@vulscan/*": ["../../packages/*/src"]
     }
   },
