@@ -4,6 +4,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "paths": {
+      "@vulscan/network-scan": ["../../packages/Network-scan/src"],
       "@vulscan/*": ["../../packages/*/src"]
     }
   },

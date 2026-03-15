@@ -63,6 +63,26 @@ Expected result:
 - Summary is shown in terminal
 - JSON report is created at the exact `--json` path
 
+## NPM Publish (Later)
+
+Use these steps when you are ready to publish the CLI package to npm.
+
+```bash
+# From repo root
+npm run build --workspace apps/cli
+npm run check-types --workspace apps/cli
+
+# Optional local pack validation
+npm pack --workspace apps/cli
+
+# Publish from the CLI workspace
+npm publish --workspace apps/cli --access public
+```
+
+Notes:
+- Package name: `vulscan-cli`
+- Global install command after publish: `npm install -g vulscan-cli`
+
 ---
 
 ## Modes
