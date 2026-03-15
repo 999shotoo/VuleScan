@@ -1,21 +1,20 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "outDir": "./dist",
-    "rootDir": "./src",
+    "composite": false,
+    "incremental": false,
     "paths": {
-      "@vulscan/network-scan": ["../../packages/Network-scan/src"],
+      "@vulscan/core": ["../../packages/core/src/index.ts"],
+      "@vulscan/bruteforce": ["../../packages/bruteforce/src/index.ts"],
+      "@vulscan/directory-search": ["../../packages/directory-search/src/index.ts"],
+      "@vulscan/encryption-analyzer": ["../../packages/encryption-analyzer/src/index.ts"],
+      "@vulscan/internet-archive": ["../../packages/internet-archive/src/index.ts"],
+      "@vulscan/network-scan": ["../../packages/Network-scan/src/index.ts"],
+      "@vulscan/subdomain": ["../../packages/subdomain/src/index.ts"],
       "@vulscan/*": ["../../packages/*/src"]
     }
   },
-  "include": ["src/**/*"],
-  "references": [
-    { "path": "../../packages/core" },
-    { "path": "../../packages/bruteforce" },
-    { "path": "../../packages/directory-search" },
-    { "path": "../../packages/encryption-analyzer" },
-    { "path": "../../packages/internet-archive" },
-    { "path": "../../packages/Network-scan" },
-    { "path": "../../packages/subdomain" }
-  ]
+  "include": ["src/**/*"]
 }
