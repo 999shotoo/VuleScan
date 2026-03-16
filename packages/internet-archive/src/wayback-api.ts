@@ -1,4 +1,3 @@
-import axios, { AxiosInstance } from 'axios';
 import logger from './logger.js';
 import { WaybackAvailabilityResponse } from './types.js';
 
@@ -7,16 +6,13 @@ import { WaybackAvailabilityResponse } from './types.js';
  * Checks if a URL is archived and provides access to snapshots
  */
 export class WaybackAPI {
-  private client: AxiosInstance;
   private baseUrl: string = 'https://archive.org/wayback/available';
+  private timeout: number;
+  private headers: Record<string, string>;
 
   constructor(userAgent?: string) {
-    this.client = axios.create({
-      timeout: 10000,
-      headers: {
-        'User-Agent': userAgent || 'Mozilla/5.0 (Vulnerability Scanner)',
-      },
-    });
+    this.timeout = 10000;
+    this.headers = { 'User-Agent': userAgent || 'Mozilla/5.0 (Vulnerability Scanner)' };
   }
 
   /**
@@ -34,16 +30,26 @@ export class WaybackAPI {
         params.timestamp = timestamp;
       }
 
-      const response = await this.client.get<WaybackAvailabilityResponse>(this.baseUrl, {
-        params,
-      });
+      const qs = new URLSearchParams(
+        Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)]))
+      );
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), this.timeout);
+      let res: globalThis.Response;
+      try {
+        res = await fetch(`${this.baseUrl}?${qs}`, { headers: this.headers, signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json() as WaybackAvailabilityResponse;
 
       logger.debug('Wayback availability check successful', {
         url,
-        available: !!response.data.archived_snapshots.closest,
+        available: !!data.archived_snapshots.closest,
       });
 
-      return response.data;
+      return data;
     } catch (error) {
       logger.error('Error checking Wayback availability', error instanceof Error ? error : new Error(String(error)));
       throw new Error(`Failed to check Wayback availability for ${url}`);

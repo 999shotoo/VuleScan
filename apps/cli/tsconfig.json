@@ -2,12 +2,10 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "moduleResolution": "Node",
+    "moduleResolution": "node",
     "outDir": "./dist",
     "composite": false,
-    "incremental": false,
     "paths": {
-      "@vulscan/network-scan": ["../../packages/Network-scan/src"],
       "@vulscan/*": ["../../packages/*/src"]
     }
   },

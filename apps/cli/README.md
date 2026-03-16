@@ -19,7 +19,7 @@ vulscan https://example.com --all --json scan-reports/cli-smoke
 
 ### Via npm (published package)
 ```bash
-npm install -g vulscan-cli
+npm install -g @vulscan/cli
 ```
 
 Verify installed version:
@@ -66,7 +66,7 @@ Expected result:
 ## Monorepo Compatibility Notes
 
 - Scanner module imports use named exports from `@vulscan/*` packages.
-- CLI `tsconfig.json` keeps an explicit alias for `@vulscan/network-scan` to handle the `packages/Network-scan` folder casing on Linux CI.
+- CLI `tsconfig.json` uses a single wildcard alias: `@vulscan/*` -> `../../packages/*/src`.
 - CLI `package.json` explicitly declares internal `@vulscan/*` dependencies for consistent workspace and npm resolution.
 
 ## NPM Publish (Later)
@@ -86,8 +86,8 @@ npm publish --workspace apps/cli --access public
 ```
 
 Notes:
-- Package name: `vulscan-cli`
-- Global install command after publish: `npm install -g vulscan-cli`
+- Package name: `@vulscan/cli`
+- Global install command after publish: `npm install -g @vulscan/cli`
 
 ---
 
@@ -414,8 +414,8 @@ node dist/index.js https://example.com --all
 
 | Field       | Value                           |
 |-------------|---------------------------------|
-| Name        | `vulscan-cli`                   |
-| Version     | `1.0.5`                         |
+| Name        | `@vulscan/cli`                  |
+| Version     | `1.0.0`                         |
 | Node        | >= 18.0.0                       |
 | Binary      | `vulscan`                       |
 | Format      | ESM (bundled via tsup)          |
