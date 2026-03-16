@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Routes, Route, HashRouter, Outlet, Link } from 'react-router-dom';
+import { Routes, Route, HashRouter, Outlet, useLocation } from 'react-router-dom';
 import Home from '@/src/pages/home';
 import { TooltipProvider } from './components/ui/tooltip';
 
@@ -10,11 +10,37 @@ import {
 } from "./components/ui/sidebar"
 import { AppSidebar } from './components/sidebar-2';
 import { ChatHome } from './pages/chat/home';
-import { SimpleChat } from './pages/chat/simple-chat';
 import { MainChat } from './pages/chat/mainchat';
+import SubdomainFinderPage from './pages/tools/subdomain-finder';
+
+const SectionPlaceholder = ({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) => (
+  <div className="flex h-full items-center justify-center px-6">
+    <div className="max-w-md text-center">
+      <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+    </div>
+  </div>
+)
 
 const Layout = () => {
+  const location = useLocation()
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  const isChatHomeRoute = location.pathname === '/chat'
+  const isChatSessionRoute = /^\/chat\/[^/]+$/.test(location.pathname)
+  const shouldShowSecondarySidebar =
+    isChatHomeRoute ||
+    isChatSessionRoute ||
+    location.pathname === '/drafts' ||
+    location.pathname === '/sent' ||
+    location.pathname === '/junk' ||
+    location.pathname === '/trash'
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -62,8 +88,10 @@ const Layout = () => {
           >
             <AppSidebar />
             <SidebarInset className="flex flex-col ">
-              <header className="bg-background sticky top-0 flex shrink-0 items-center gap-2 border-b p-4 z-10 drag ">
-                <SidebarTrigger className="-ml-1 no-drag" />
+              <header className="bg-background sticky top-0 flex shrink-0 items-center gap-2 border-b p-4 h-14 z-10 drag ">
+                {shouldShowSecondarySidebar && (
+                  <SidebarTrigger className="-ml-1 no-drag" />
+                )}
               
               </header>
               <div className="flex-1 overflow-hidden">
@@ -91,6 +119,44 @@ function App(): React.JSX.Element {
             <Route index element={<Home />} />
             <Route path="/chat" element={<ChatHome />} />
             <Route path="/chat/:id" element={<MainChat />} />
+            <Route path="/tools/subdomain-finder" element={<SubdomainFinderPage />} />
+            <Route path="/tools/subbdomain-finder" element={<SubdomainFinderPage />} />
+              <Route
+                path="/drafts"
+                element={
+                  <SectionPlaceholder
+                    title="Drafts"
+                    description="Saved draft scan configurations and reports will appear here."
+                  />
+                }
+              />
+              <Route
+                path="/sent"
+                element={
+                  <SectionPlaceholder
+                    title="Sent"
+                    description="Completed reports and previously shared results live here."
+                  />
+                }
+              />
+              <Route
+                path="/junk"
+                element={
+                  <SectionPlaceholder
+                    title="Junk"
+                    description="Suspicious or discarded items can be reviewed here if needed."
+                  />
+                }
+              />
+              <Route
+                path="/trash"
+                element={
+                  <SectionPlaceholder
+                    title="Trash"
+                    description="Recently removed items are kept here until they are cleared permanently."
+                  />
+                }
+              />
             <Route path="*" element={<div>404 Not Found</div>} />
             
           </Route>

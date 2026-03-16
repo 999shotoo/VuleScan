@@ -65,7 +65,7 @@ const addKeysToTokens = (lines: ThemedToken[][]): KeyedLine[] =>
 // Token rendering component
 const TokenSpan = ({ token }: { token: ThemedToken }) => (
   <span
-    className="dark:!bg-[var(--shiki-dark-bg)] dark:!text-[var(--shiki-dark)]"
+    className=""
     style={
       {
         backgroundColor: token.bgColor,
@@ -148,7 +148,7 @@ const getHighlighter = (
 
   const highlighterPromise = createHighlighter({
     langs: [language],
-    themes: ["github-light", "github-dark"],
+    themes: ["github-dark"],
   });
 
   highlighterCache.set(language, highlighterPromise);
@@ -158,13 +158,13 @@ const getHighlighter = (
 // Create raw tokens for immediate display while highlighting loads
 const createRawTokens = (code: string): TokenizedCode => ({
   bg: "transparent",
-  fg: "inherit",
+  fg: "var(--foreground)",
   tokens: code.split("\n").map((line) =>
     line === ""
       ? []
       : [
           {
-            color: "inherit",
+            color: "var(--foreground)",
             content: line,
           } as ThemedToken,
         ]
@@ -203,10 +203,7 @@ export const highlightCode = (
 
       const result = highlighter.codeToTokens(code, {
         lang: langToUse,
-        themes: {
-          dark: "github-dark",
-          light: "github-light",
-        },
+        theme: "github-dark",
       });
 
       const tokenized: TokenizedCode = {
@@ -276,7 +273,7 @@ const CodeBlockBody = memo(
     return (
       <pre
         className={cn(
-          "dark:!bg-[var(--shiki-dark-bg)] dark:!text-[var(--shiki-dark)] m-0 p-4 text-sm overflow-x-auto",
+          "m-0 p-4 text-sm overflow-x-auto",
           className
         )}
         style={{ ...preStyle, width: '100%', maxWidth: '100%', minWidth: 0 }}

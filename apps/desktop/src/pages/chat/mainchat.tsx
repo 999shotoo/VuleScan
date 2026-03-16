@@ -22,8 +22,8 @@ import {
   PromptInputTools,
   usePromptInputAttachments,
 } from "@/src/components/ai-elements/prompt-input";
-import { PaperclipIcon, CopyIcon, RefreshCcwIcon, CheckIcon, FileIcon, EyeIcon } from "lucide-react";
-import { useState, useEffect, useCallback, memo } from "react";
+import { PaperclipIcon, CopyIcon, RefreshCcwIcon, FileIcon, EyeIcon } from "lucide-react";
+import { useState, useEffect, useCallback, useRef, memo } from "react";
 import { useChat } from "@ai-sdk/react";
 import {
   ModelSelector,
@@ -34,7 +34,6 @@ import {
   ModelSelectorItem,
   ModelSelectorList,
   ModelSelectorLogo,
-  ModelSelectorLogoGroup,
   ModelSelectorName,
   ModelSelectorTrigger,
 } from "@/src/components/ai-elements/model-selector";
@@ -180,34 +179,52 @@ const TextWithHtmlPreview = ({ text, onPreview, messageId, partIndex }: TextWith
 // ModelItem component for rendering each model
 interface ModelItemProps {
   model: typeof models[0];
-  selectedModel: string;
   onSelect: (id: string) => void;
 }
 
-const ModelItem = memo(({ model, selectedModel, onSelect }: ModelItemProps) => {
+const ModelItem = memo(({ model, onSelect }: ModelItemProps) => {
   const handleSelect = useCallback(
     () => onSelect(model.id),
     [onSelect, model.id]
   );
   return (
-    <ModelSelectorItem key={model.id} onSelect={handleSelect} value={model.id}>
+    <ModelSelectorItem
+      key={model.id}
+      onSelect={handleSelect}
+      value={model.id}
+      className="my-1 rounded-md data-selected:bg-accent/70 data-selected:text-accent-foreground"
+    >
       <ModelSelectorLogo provider={model.chefSlug} />
       <ModelSelectorName>{model.name}</ModelSelectorName>
-      <ModelSelectorLogoGroup>
-        {model.providers.map((provider) => (
-          <ModelSelectorLogo key={provider} provider={provider} />
-        ))}
-      </ModelSelectorLogoGroup>
-      {selectedModel === model.id ? (
-        <CheckIcon className="ml-auto size-4" />
-      ) : (
-        <div className="ml-auto size-4" />
-      )}
     </ModelSelectorItem>
   );
 });
 
 ModelItem.displayName = "ModelItem";
+
+const extractLatestHtmlPreview = (chatMessages: any[]): string | null => {
+  const htmlRegex = /```html(?:\s+[^\n]+)?\n([\s\S]*?)```/;
+
+  for (let i = chatMessages.length - 1; i >= 0; i -= 1) {
+    const message = chatMessages[i];
+    if (message?.role !== 'assistant' || !Array.isArray(message?.parts)) {
+      continue;
+    }
+
+    for (const part of message.parts) {
+      if (part?.type !== 'text' || typeof part?.text !== 'string') {
+        continue;
+      }
+
+      const match = part.text.match(htmlRegex);
+      if (match) {
+        return match[1];
+      }
+    }
+  }
+
+  return null;
+};
 
 const models = [
   { id: "openai/gpt-4o", name: "GPT-4o", chef: "OpenAI", chefSlug: "openai", providers: ["openai"] },
@@ -243,13 +260,17 @@ const models = [
 export const MainChat = () => {
   const params = useParams()
   const location = useLocation()
-  const sessionId = params.id || Date.now().toString();
+  const fallbackSessionIdRef = useRef(Date.now().toString());
+  const sessionId = params.id ?? fallbackSessionIdRef.current;
   const [text, setText] = useState<string>("");
   const [model, setModel] = useState<string>(models[0].id);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const [initialMessageSent, setInitialMessageSent] = useState(false);
+  const initialMessageSentForSession = useRef<Set<string>>(new Set());
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [isSwitchingChat, setIsSwitchingChat] = useState(false);
   
   const { messages, sendMessage, status, setMessages, error, regenerate, stop } = useChat({
     id: sessionId,
@@ -260,31 +281,16 @@ export const MainChat = () => {
 
   // Extract HTML from latest message for preview
   useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === 'assistant') {
-        for (const part of lastMessage.parts) {
-          if (part.type === 'text') {
-            const htmlMatch = part.text.match(/```html(?:\s+[^\n]+)?\n([\s\S]*?)```/);
-            if (htmlMatch) {
-              setPreviewHtml(htmlMatch[1]);
-              setShowPreview(true);
-              return;
-            }
-          }
-        }
-      }
-    }
-    // No HTML found or no messages - close preview
-    setPreviewHtml(null);
-    setShowPreview(false);
+    const nextPreviewHtml = extractLatestHtmlPreview(messages as any[]);
+    setPreviewHtml(nextPreviewHtml);
+    setShowPreview(Boolean(nextPreviewHtml));
   }, [messages]);
 
   // Load chat from localStorage on mount
   useEffect(() => {
-    // Reset preview state when switching chats
-    setPreviewHtml(null);
-    setShowPreview(false);
+    setIsSwitchingChat(true);
+    setMessages([]);
+    setInitialMessageSent(false);
     
     let existingChat = getChatById(sessionId);
 
@@ -296,20 +302,42 @@ export const MainChat = () => {
     if (existingChat.messages.length > 0) {
       setMessages(existingChat.messages);
       setInitialMessageSent(true);
+      const savedPreviewHtml = extractLatestHtmlPreview(existingChat.messages as any[]);
+      setPreviewHtml(savedPreviewHtml);
+      setShowPreview(Boolean(savedPreviewHtml));
+    } else {
+      setMessages([]);
+      setPreviewHtml(null);
+      setShowPreview(false);
     }
-  }, [sessionId]);
+
+    const animationFrame = window.requestAnimationFrame(() => {
+      setIsSwitchingChat(false);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+    };
+  }, [sessionId, setMessages]);
 
   // Handle initial message from navigation state
   useEffect(() => {
     const initialMessage = (location.state as any)?.initialMessage;
-    if (initialMessage && !initialMessageSent && messages.length === 0) {
+    if (
+      initialMessage &&
+      !initialMessageSent &&
+      messages.length === 0 &&
+      !initialMessageSentForSession.current.has(sessionId)
+    ) {
+      // Guard against duplicate sends caused by Strict Mode effect re-runs.
+      initialMessageSentForSession.current.add(sessionId);
       sendMessage(
         { text: initialMessage, files: [] },
         { body: { model: model } }
       );
       setInitialMessageSent(true);
     }
-  }, [location.state, initialMessageSent, messages.length]);
+  }, [location.state, initialMessageSent, messages.length, sessionId, model, sendMessage]);
 
   // Save messages to localStorage whenever they change
   useEffect(() => {
@@ -358,22 +386,38 @@ export const MainChat = () => {
     setShowPreview(true);
   }, []);
 
-  // Create preview URL
-  const previewUrl = previewHtml ? URL.createObjectURL(new Blob([previewHtml], { type: 'text/html' })) : null;
-  
+  // Keep preview URL stable until preview HTML actually changes to avoid iframe flicker.
   useEffect(() => {
+    if (!previewHtml) {
+      setPreviewUrl(null);
+      return;
+    }
+
+    const nextUrl = URL.createObjectURL(new Blob([previewHtml], { type: 'text/html' }));
+    setPreviewUrl(nextUrl);
+
     return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
+      URL.revokeObjectURL(nextUrl);
     };
-  }, [previewUrl]);
+  }, [previewHtml]);
+
+  const hasPreview = showPreview && Boolean(previewHtml) && Boolean(previewUrl);
 
   return (
     <div className="h-full flex flex-row" style={{ overflow: 'hidden', width: '100%' }}>
       {/* LEFT SIDE: Chat */}
-      <div className={`flex flex-col ${showPreview ? 'flex-1' : 'w-full'} transition-all duration-300`} style={{ overflow: 'hidden', minWidth: 0 }}>
-        <div className="flex-1 flex flex-col" style={{ overflow: 'hidden', minWidth: 0 }}>
+      <div
+        className="flex flex-col transition-[width] duration-300 ease-out"
+        style={{
+          overflow: 'hidden',
+          minWidth: 0,
+          width: hasPreview ? '56%' : '100%',
+        }}
+      >
+        <div
+          className={`flex-1 flex flex-col transition-opacity duration-200 ${isSwitchingChat ? 'opacity-0' : 'opacity-100'}`}
+          style={{ overflow: 'hidden', minWidth: 0 }}
+        >
           <Conversation className="overflow-hidden">
             <ConversationContent className="px-6 py-4 mx-auto max-w-3xl xl:max-w-7xl ">
             {messages.length === 0 && (
@@ -674,7 +718,7 @@ export const MainChat = () => {
                           )}
                         </Button>
                       </ModelSelectorTrigger>
-                      <ModelSelectorContent>
+                      <ModelSelectorContent className="w-[380px] max-w-[calc(100vw-2rem)] border border-border/80 bg-popover/95 shadow-2xl backdrop-blur-sm">
                         <ModelSelectorInput placeholder="Search models..." />
                         <ModelSelectorList>
                           <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
@@ -687,7 +731,6 @@ export const MainChat = () => {
                                     key={m.id}
                                     model={m}
                                     onSelect={handleModelSelect}
-                                    selectedModel={model}
                                   />
                                 ))}
                             </ModelSelectorGroup>
@@ -719,8 +762,18 @@ export const MainChat = () => {
       </div>
       
       {/* RIGHT SIDE: Preview Panel */}
-      {showPreview && previewHtml && previewUrl && (
-        <div className="flex-1 flex flex-col h-full border-l border-border" style={{ overflow: 'hidden', minWidth: 0 }}>
+      <div
+        className="flex flex-col h-full transition-[width,opacity] duration-300 ease-out"
+        style={{
+          overflow: 'hidden',
+          minWidth: 0,
+          width: hasPreview ? '44%' : '0%',
+          opacity: hasPreview ? 1 : 0,
+          borderLeftWidth: hasPreview ? 1 : 0,
+          borderLeftStyle: 'solid',
+        }}
+      >
+        {previewUrl && (
           <WebPreview defaultUrl={previewUrl} className="h-full w-full rounded-none border-0 overflow-hidden">
             <WebPreviewNavigation className="bg-muted border-b border-border">
               <WebPreviewUrl className="bg-background" />
@@ -730,8 +783,8 @@ export const MainChat = () => {
               className="flex-1 bg-white dark:bg-white" 
             />
           </WebPreview>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

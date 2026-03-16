@@ -64,6 +64,17 @@ export function updateChatMessages(id: string, messages: UIMessage[]): void {
   }
 }
 
+export function updateChatTitle(id: string, title: string): void {
+  const chat = getChatById(id);
+  if (!chat) {
+    return;
+  }
+
+  chat.title = title;
+  chat.updatedAt = Date.now();
+  saveChat(chat);
+}
+
 export function deleteChat(id: string): void {
   try {
     const chats = getAllChats();

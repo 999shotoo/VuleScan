@@ -343,16 +343,27 @@ export const PromptInputActionAddAttachments = ({
 }: PromptInputActionAddAttachmentsProps) => {
   const attachments = usePromptInputAttachments();
 
-  const handleSelect = useCallback(
-    (e: Event) => {
-      e.preventDefault();
+  const openDialog = useCallback(() => {
+    // Let the menu close first, then open native picker from the same user action chain.
+    window.requestAnimationFrame(() => {
       attachments.openFileDialog();
+    });
+  }, [attachments]);
+
+  const handleSelect = useCallback(() => {
+    openDialog();
+  }, [openDialog]);
+
+  const handleClick = useCallback<React.MouseEventHandler<HTMLDivElement>>(
+    (e) => {
+      e.preventDefault();
+      openDialog();
     },
-    [attachments]
+    [openDialog]
   );
 
   return (
-    <DropdownMenuItem {...props} onSelect={handleSelect}>
+    <DropdownMenuItem {...props} onClick={handleClick} onSelect={handleSelect}>
       <ImageIcon className="mr-2 size-4" /> {label}
     </DropdownMenuItem>
   );
@@ -786,7 +797,7 @@ export const PromptInput = ({
       <input
         accept={accept}
         aria-label="Upload files"
-        className="hidden"
+        className="absolute h-px w-px -translate-x-full opacity-0 pointer-events-none"
         multiple={multiple}
         onChange={handleChange}
         ref={inputRef}
