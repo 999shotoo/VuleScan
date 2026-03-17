@@ -8,6 +8,7 @@ export type SeverityLevel = "low" | "medium" | "high";
 export interface ScanResult {
   name: string;
   status: ScanStatus;
+  displayStatus?: string;
   severity?: SeverityLevel;
   details?: string;
 }

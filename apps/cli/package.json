@@ -1,6 +1,7 @@
 {
-  "name": "vulscan-cli",
-  "version": "1.0.5",
+  "name": "@vulscan/cli",
+  "version": "1.0.0",
+  "private": true,
   "description": "Advanced vulnerability scanner CLI - port scanning, subdomain discovery, brute force, directory search and more",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,7 +12,8 @@
     "build": "tsup",
     "dev": "node --loader ts-node/esm src/index.ts",
     "start": "node dist/index.js",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "check-types": "tsc --noEmit -p tsconfig.json"
   },
   "files": [
     "dist",
@@ -35,6 +37,13 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@vulscan/bruteforce": "*",
+    "@vulscan/core": "*",
+    "@vulscan/directory-search": "*",
+    "@vulscan/encryption-analyzer": "*",
+    "@vulscan/internet-archive": "*",
+    "@vulscan/network-scan": "*",
+    "@vulscan/subdomain": "*",
     "inquirer": "^9.2.12",
     "ssh2": "^1.17.0"
   },
