@@ -378,7 +378,26 @@ export async function resolveSubdomain(
   proxyList?: string[]
 ): Promise<SubdomainResult> {
   try {
-    const res = await dns.resolve4(subdomain);
+    let resolvedIps: string[] = [];
+    try {
+      resolvedIps = await dns.resolve4(subdomain);
+    } catch {
+      // Fall back to AAAA and system resolver to avoid DNS-provider specific misses.
+      try {
+        const v6 = await dns.resolve6(subdomain);
+        if (Array.isArray(v6) && v6.length > 0) {
+          resolvedIps = v6;
+        }
+      } catch {
+        try {
+          const lookedUp = await dns.lookup(subdomain, { all: true });
+          resolvedIps = lookedUp.map(entry => entry.address).filter(Boolean);
+        } catch {
+          resolvedIps = [];
+        }
+      }
+    }
+
     let httpResult = null;
 
     // Determine which proxy to use
@@ -395,15 +414,17 @@ export async function resolveSubdomain(
       }
     }
 
+    // If DNS resolution failed but HTTP probe succeeds, treat host as resolved/reachable.
+    const resolved = resolvedIps.length > 0 || !!httpResult;
     const cdn = detectCDN(httpResult?.server || null);
 
     return {
       subdomain,
-      resolved: true,
-      ips: res,
+      resolved,
+      ips: resolvedIps,
       http: httpResult,
       cdn,
-      confidence: httpResult ? "HIGH" : "MEDIUM"
+      confidence: httpResult ? "HIGH" : (resolved ? "MEDIUM" : "LOW")
     };
   } catch {
     return {
@@ -439,7 +460,7 @@ export async function runConcurrent(
         proxyIndex,
         proxyList
       );
-      if (r.resolved) results.push(r);
+      results.push(r);
     }
   }
 
@@ -456,6 +477,117 @@ export interface FindOptions {
   queryTypes?: DNSRecordType[];
   reverseLookup?: boolean;
   zoneTransferCheck?: boolean;
+}
+
+const COMMON_SUBDOMAIN_PREFIXES = [
+  "www",
+  "mail",
+  "webmail",
+  "smtp",
+  "imap",
+  "pop",
+  "api",
+  "app",
+  "portal",
+  "admin",
+  "auth",
+  "login",
+  "sso",
+  "student",
+  "faculty",
+  "staff",
+  "erp",
+  "lms",
+  "moodle",
+  "library",
+  "news",
+  "blog",
+  "cdn",
+  "static",
+  "assets",
+  "img",
+  "files",
+  "download",
+  "dev",
+  "test",
+  "staging",
+  "qa",
+  "beta",
+  "vpn",
+  "remote",
+  "help",
+  "support",
+  "admissions",
+  "cms"
+];
+
+function buildCommonCandidates(target: string): string[] {
+  return COMMON_SUBDOMAIN_PREFIXES.map(prefix => `${prefix}.${target}`);
+}
+
+async function fetchPassiveSubdomainsFromCrtSh(domain: string, timeoutMs: number): Promise<string[]> {
+  const url = `https://crt.sh/?q=%25.${domain}&output=json`;
+
+  return new Promise(resolve => {
+    const req = https.get(
+      url,
+      {
+        headers: {
+          "User-Agent": "VuleScan-Subdomain/1.0"
+        },
+        timeout: timeoutMs
+      },
+      res => {
+        if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+          res.resume();
+          resolve([]);
+          return;
+        }
+
+        let body = "";
+        res.setEncoding("utf8");
+        res.on("data", chunk => {
+          body += chunk;
+        });
+        res.on("end", () => {
+          try {
+            const parsed = JSON.parse(body);
+            if (!Array.isArray(parsed)) {
+              resolve([]);
+              return;
+            }
+
+            const discovered = new Set<string>();
+            for (const row of parsed) {
+              const nameValue = String(row?.name_value || "");
+              for (const rawName of nameValue.split("\n")) {
+                const normalized = rawName
+                  .trim()
+                  .toLowerCase()
+                  .replace(/^\*\./, "")
+                  .replace(/\.$/, "");
+
+                if (!normalized) continue;
+                if (normalized === domain || normalized.endsWith(`.${domain}`)) {
+                  discovered.add(normalized);
+                }
+              }
+            }
+
+            resolve(Array.from(discovered));
+          } catch {
+            resolve([]);
+          }
+        });
+      }
+    );
+
+    req.on("error", () => resolve([]));
+    req.on("timeout", () => {
+      req.destroy();
+      resolve([]);
+    });
+  });
 }
 
 export async function detectWildcard(domain: string): Promise<{ enabled: boolean; test: string }> {
@@ -478,6 +610,10 @@ export async function findSubdomains(target: string, opts: FindOptions = {}): Pr
   const reverseLookupEnabled = opts.reverseLookup ?? true;
   const zoneTransferEnabled = opts.zoneTransferCheck ?? true;
 
+  // Force reliable public DNS servers so results are consistent across all OS/networks.
+  // Windows system DNS (home routers) often drops MX/NS/TXT/CNAME queries causing 0 results.
+  dnsSync.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"]);
+
   const start = Date.now();
 
   try {
@@ -494,9 +630,14 @@ export async function findSubdomains(target: string, opts: FindOptions = {}): Pr
       }
     }
     
+    // Detect wildcard DNS early; wildcard domains can make brute candidates noisy.
+    const wildcard = await detectWildcard(target);
+
     // Enumerate subdomains from DNS records
     const enumeratedSubs = await enumerateFromDNS(target, queryTypes);
     const reverseSubs = await reverseEnumeration(target);
+    const passiveTimeoutMs = Math.max(timeoutMs, 8000);
+    const passiveSubs = await fetchPassiveSubdomainsFromCrtSh(target, passiveTimeoutMs);
     
     // Combine all discovered subdomains
     const allSubdomains = new Set<string>();
@@ -507,6 +648,16 @@ export async function findSubdomains(target: string, opts: FindOptions = {}): Pr
       if (sub && sub !== target) {
         allSubdomains.add(sub);
       }
+    }
+    for (const sub of passiveSubs) {
+      if (sub && sub !== target) {
+        allSubdomains.add(sub);
+      }
+    }
+
+    const bruteCandidates = buildCommonCandidates(target);
+    for (const candidate of bruteCandidates) {
+      allSubdomains.add(candidate);
     }
 
     const subdomainList = Array.from(allSubdomains);
@@ -529,9 +680,6 @@ export async function findSubdomains(target: string, opts: FindOptions = {}): Pr
         severity: "HIGH" as const
       }));
 
-    // Detect wildcard DNS
-    const wildcard = await detectWildcard(target);
-
     const end = Date.now();
 
     const proxyInfo = proxyList ? proxyList.length : (proxyUrl ? 1 : 0);
@@ -542,6 +690,7 @@ export async function findSubdomains(target: string, opts: FindOptions = {}): Pr
         techniques: [
           "DNS_RECORD_ENUMERATION",
           "REVERSE_DNS",
+          "PASSIVE_CRTSH",
           "NAMESERVER_LOOKUP",
           ...(zoneTransferEnabled ? ["ZONE_TRANSFER_CHECK"] : []),
           ...(httpProbe ? ["HTTP_PROBE"] : []),
@@ -694,7 +843,17 @@ async function mainCLI() {
   }
 }
 
-const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+const moduleFilePath =
+  typeof __filename !== "undefined"
+    ? __filename
+    : fileURLToPath(import.meta.url);
+const isSubdomainStandaloneEntry = /subdomain-finder\.(cjs|mjs|js|ts)$/.test(
+  path.basename(moduleFilePath)
+);
+const isMain =
+  !!process.argv[1] &&
+  isSubdomainStandaloneEntry &&
+  path.resolve(process.argv[1]) === path.resolve(moduleFilePath);
 
 if (isMain) {
   mainCLI();

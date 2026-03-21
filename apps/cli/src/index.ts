@@ -21,12 +21,13 @@ import {
 import {
   saveScanReport,
   listScanReports,
-  readScanReport,
+  readReportText,
   } from "./utils/fileHandler.js";
 import {
   showMainMenu,
   selectSingleScan,
   selectMultipleScans,
+  selectReport,
   confirmAction,
   getTargetUrl,
   askWordlistPath,
@@ -279,6 +280,28 @@ async function interactiveMode(initialUrl?: string): Promise<void> {
                   `Failed to save report: ${error instanceof Error ? error.message : "Unknown error"}`
                 );
               }
+            }
+          }
+          break;
+        }
+
+        case "reports": {
+          const reports = await listScanReports();
+          if (reports.length === 0) {
+            displayInfo("No saved reports found.");
+            break;
+          }
+          const selected = await selectReport(reports);
+          if (selected) {
+            try {
+              const content = await readReportText(selected);
+              console.log("\n" + "=".repeat(60));
+              console.log(content);
+              console.log("=".repeat(60) + "\n");
+            } catch (error) {
+              displayError(
+                `Failed to read report: ${error instanceof Error ? error.message : "Unknown error"}`
+              );
             }
           }
           break;

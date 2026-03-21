@@ -1,4 +1,3 @@
-import axios, { AxiosInstance } from 'axios';
 import logger from './logger.js';
 import { CDXQueryParams, CDXResponse, CDXRecord } from './types.js';
 
@@ -7,16 +6,13 @@ import { CDXQueryParams, CDXResponse, CDXRecord } from './types.js';
  * Provides advanced search and filtering capabilities for Wayback Machine captures
  */
 export class CDXAPI {
-  private client: AxiosInstance;
   private baseUrl: string = 'https://web.archive.org/cdx/search/cdx';
+  private timeout: number;
+  private headers: Record<string, string>;
 
   constructor(userAgent?: string) {
-    this.client = axios.create({
-      timeout: 30000,
-      headers: {
-        'User-Agent': userAgent || 'Mozilla/5.0 (Vulnerability Scanner)',
-      },
-    });
+    this.timeout = 30000;
+    this.headers = { 'User-Agent': userAgent || 'Mozilla/5.0 (Vulnerability Scanner)' };
   }
 
   /**
@@ -24,6 +20,16 @@ export class CDXAPI {
    * @param params - CDX query parameters
    * @returns CDX response with records
    */
+  private async fetchUrl(urlStr: string): Promise<globalThis.Response> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeout);
+    try {
+      return await fetch(urlStr, { headers: this.headers, signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   async query(params: CDXQueryParams): Promise<CDXResponse> {
     try {
       logger.debug('Executing CDX query', { url: params.url, matchType: params.matchType });
@@ -31,15 +37,17 @@ export class CDXAPI {
       // Build query parameters
       const queryParams = this.buildQueryParams(params);
 
-      const response = await this.client.get<string | (string | number)[][]>(this.baseUrl, {
-        params: queryParams,
-        responseType: params.output === 'json' ? 'json' : 'text',
-      });
-
+      const qs = new URLSearchParams(
+        Object.fromEntries(Object.entries(queryParams).map(([k, v]) => [k, String(v)]))
+      );
+      const response = await this.fetchUrl(`${this.baseUrl}?${qs}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       if (params.output === 'json') {
-        return this.parseJSONResponse(response.data as (string | number)[][]);
+        const data = await response.json() as (string | number)[][];
+        return this.parseJSONResponse(data);
       } else {
-        return this.parseTextResponse(response.data as string);
+        const text = await response.text();
+        return this.parseTextResponse(text);
       }
     } catch (error) {
       logger.error('Error executing CDX query', error instanceof Error ? error : new Error(String(error)));
@@ -227,14 +235,13 @@ export class CDXAPI {
     try {
       logger.debug('Getting number of pages', { url: params.url });
 
-      const response = await this.client.get<string>(this.baseUrl, {
-        params: {
-          ...this.buildQueryParams(params),
-          showNumPages: 'true',
-        },
-      });
-
-      const numPages = parseInt(response.data as string, 10);
+      const qparams = { ...this.buildQueryParams(params), showNumPages: 'true' };
+      const qs = new URLSearchParams(
+        Object.fromEntries(Object.entries(qparams).map(([k, v]) => [k, String(v)]))
+      );
+      const response = await this.fetchUrl(`${this.baseUrl}?${qs}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const numPages = parseInt(await response.text(), 10);
       logger.debug('Got number of pages', { numPages });
 
       return numPages;
