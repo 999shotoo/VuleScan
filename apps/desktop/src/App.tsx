@@ -120,7 +120,6 @@ function App(): React.JSX.Element {
             <Route path="/chat" element={<ChatHome />} />
             <Route path="/chat/:id" element={<MainChat />} />
             <Route path="/tools/subdomain-finder" element={<SubdomainFinderPage />} />
-            <Route path="/tools/subbdomain-finder" element={<SubdomainFinderPage />} />
               <Route
                 path="/drafts"
                 element={

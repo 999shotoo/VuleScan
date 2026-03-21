@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "pentestMCP": {
+      "transport": "stdio",
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "ramgameer/pentest-mcp:stdio-local"
+      ],
+      "enabled": true
+    }
+  },
+  "preferences": {
+    "coworkWebSearchEnabled": true,
+    "coworkScheduledTasksEnabled": false,
+    "sidebarMode": "chat"
+  }
+}

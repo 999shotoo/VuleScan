@@ -3,6 +3,7 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { startServer, stopServer } from './server/index'
+import { ensureAppConfigFile } from './server/mcp-config'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -89,6 +90,17 @@ app.on('before-quit', () => {
 })
 
 app.whenReady().then(() => {
+  const configDir = path.join(app.getPath('userData'), 'config')
+  process.env.VULESCAN_CONFIG_DIR = configDir
+
+  ensureAppConfigFile()
+    .then((configPath) => {
+      console.log(`Using MCP config: ${configPath}`)
+    })
+    .catch((error) => {
+      console.error('Failed to initialize MCP config file:', error)
+    })
+
   // Start the API server
   apiServer = startServer()
   createWindow()
